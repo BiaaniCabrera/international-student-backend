@@ -4,10 +4,15 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const multer = require('multer');
-
 const path = require('path');
 require('dotenv').config();
-const router = express.Router();
+
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
 // Configure Multer to handle file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -21,22 +26,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Handle profile image upload
-router.post('/upload-profile-image', upload.single('profileImage'), (req, res) => {
-  const imageUrl = `/uploads/profile-images/${req.file.filename}`;
-  res.json({ imageUrl });
-});
-
-module.exports = router;
-
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-app.use('/uploads', express.static(__dirname + '/uploads'));
-
-
-
+// MongoDB connection using environment variable
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -44,6 +34,7 @@ mongoose.connect(process.env.MONGO_URI, {
   .then(() => console.log('MongoDB Connected'))
   .catch(err => console.log(err));
 
+// Define your MongoDB schemas and models here
 const userSchema = new mongoose.Schema({
   email: String,
   username: String,
@@ -68,6 +59,9 @@ const commentSchema = new mongoose.Schema({
 });
 const Comment = mongoose.model('Comment', commentSchema);
 
+// Define your Express routes here
+
+// Example route to register a user
 app.post('/register', async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
@@ -83,6 +77,7 @@ app.post('/register', async (req, res) => {
   }
 });
 
+// Example route to log in a user
 app.post('/login', async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.email });
@@ -163,4 +158,6 @@ app.get('/api/comments', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
+
+// Start the server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
